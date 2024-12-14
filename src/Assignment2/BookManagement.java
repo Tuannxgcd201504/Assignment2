@@ -25,10 +25,6 @@ class MyArrayList<T> {
         return (T) elements[index];
     }
 
-    /*public void set(int index, T element) {
-        elements[index] = element;
-    }*/
-
     public T remove(int index) {
         if (index >= size || index < 0) {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
@@ -72,8 +68,8 @@ class MyArrayList<T> {
     }
 }
 
+
 public class BookManagement {
-    //private static int orderCounter = 1;
 
     public static void main(String[] args) {
         MyArrayList<Book> books = new MyArrayList<>();
@@ -83,55 +79,49 @@ public class BookManagement {
 
         System.out.println("Book Management Application");
         System.out.println("----------------------------");
+
+        // Initialize books and orders
+        initializeBooks(books);
+        initializeOrders(orderQueue, books);
+
         int choice = 0;
-
-        // Mockup data
-        books.add(new Book("The Great Gatsby", "Fiction", "F. Scott Fitzgerald", 9.99, 10));
-        books.add(new Book("1984", "Dystopian", "George Orwell", 8.99, 10));
-        books.add(new Book("To Kill a Mockingbird", "Fiction", "Harper Lee", 7.99, 20));
-        books.add(new Book("Sherlock Holmes", "Detective", "Arthur Conan Doyle", 10.5, 25));
-        books.add(new Book("Titanic", "Romantic", "James Cameron", 12.5, 15));
-
-        orderQueue.offer(new Order("ORD1", books.get(4), 2, "Alice Nguyen", "123 Main St, Hanoi"));
-        orderQueue.offer(new Order("ORD2", books.get(2), 1, "Bob Tran", "456 Oak St, Ho Chi Minh City"));
-        orderQueue.offer(new Order("ORD3", books.get(1), 3, "Charlie Le", "789 Pine St, Da Nang"));
-        orderQueue.offer(new Order("ORD4", books.get(3), 4, "David Pham", "321 Elm St, Hai Phong"));
 
         while (choice != 9) {
             displayMenu();
             choice = Integer.parseInt(scanner.nextLine());
+
             switch (choice) {
                 case 1:
                     System.out.println("Adding a new book");
-                    addBook(books, scanner);
+                    measure("Add Book", () -> addBook(books, scanner));
                     break;
                 case 2:
                     System.out.println("Displaying all books");
-                    displayBooks(books);
+                    measure("Display Books", () -> displayBooks(books));
                     break;
                 case 3:
                     System.out.println("Searching for a book");
-                    searchBook(books, scanner);
+                    measure("Search Book", () -> searchBook(books, scanner));
                     break;
                 case 4:
                     System.out.println("Sort books");
-                    sortBook(books, scanner);
+                    measure("Sort Books", () -> sortBook(books, scanner));
                     break;
                 case 5:
                     System.out.println("Place an order");
-                    placeOrder(books, orderQueue, scanner);
+                    measure("Place Order", () -> placeOrder(books, orderQueue, scanner));
                     break;
                 case 6:
                     System.out.println("Display all orders");
-                    displayOrders(orderQueue);
+                    measure("Display Orders", () -> displayOrders(orderQueue));
                     break;
                 case 7:
                     System.out.println("Search order");
-                    searchOrder(orderQueue, scanner);
+                    measure("Search Order", () -> searchOrder(orderQueue, scanner));
                     break;
                 case 8:
                     System.out.println("Process next order");
-                    processOrder(orderQueue);
+                    measure("Process Order", () -> processOrder(orderQueue));
                     break;
                 case 9:
                     System.out.println("Exiting the program...");
@@ -158,23 +148,27 @@ public class BookManagement {
     }
 
     private static void addBook(MyArrayList<Book> books, Scanner scanner) {
-        System.out.print("Please enter the book's name: ");
-        String name = scanner.nextLine();
+        try {
+            System.out.print("Please enter the book's name: ");
+            String name = scanner.nextLine();
 
-        System.out.print("Please enter the book's genre: ");
-        String genre = scanner.nextLine();
+            System.out.print("Please enter the book's genre: ");
+            String genre = scanner.nextLine();
 
-        System.out.print("Please enter the author's name: ");
-        String author = scanner.nextLine();
+            System.out.print("Please enter the author's name: ");
+            String author = scanner.nextLine();
 
-        System.out.print("Please enter the price: ");
-        double price = Double.parseDouble(scanner.nextLine());
+            System.out.print("Please enter the price: ");
+            double price = Double.parseDouble(scanner.nextLine());
 
-        System.out.print("Please enter the quantity: ");
-        int quantity = Integer.parseInt(scanner.nextLine());
+            System.out.print("Please enter the quantity: ");
+            int quantity = Integer.parseInt(scanner.nextLine());
 
-        books.add(new Book(name, genre, author, price, quantity));
-        System.out.println("Book added successfully!");
+            books.add(new Book(name, genre, author, price, quantity));
+            System.out.println("Book added successfully!");
+        } catch (NumberFormatException e) {
+            System.out.println("Invalid input. Please enter a valid number for price and quantity.");
+        }
     }
 
     private static void displayBooks(MyArrayList<Book> books) {
@@ -228,9 +222,8 @@ public class BookManagement {
                 books.sort((b1, b2) -> Double.compare(b1.getPrice(), b2.getPrice()));
                 break;
             default:
-                System.out.println("Invalid choice. Sorting by Name.");
-                books.sort((b1, b2) -> b1.getName().compareToIgnoreCase(b2.getName()));
-                break;
+                System.out.println("Invalid choice");
+                return;
         }
 
         System.out.println("Books sorted successfully.");
@@ -279,11 +272,8 @@ public class BookManagement {
                 int quantity = Integer.parseInt(scanner.nextLine());
 
                 if (quantity <= selectedBook.getQuantity()) {
-                    // Generate new order ID
-                    String orderId = generateOrderId(orderQueue);
-                    Order newOrder = new Order(orderId, selectedBook, quantity, customerName, shippingAddress);
-                    orderQueue.offer(newOrder); // Ensure to use the appropriate method to add to the queue
-
+                    Order newOrder = new Order(selectedBook, quantity, customerName, shippingAddress);
+                    orderQueue.offer(newOrder);
                     // Update book quantity
                     selectedBook.setQuantity(selectedBook.getQuantity() - quantity);
 
@@ -299,63 +289,43 @@ public class BookManagement {
         }
     }
 
-    private static String generateOrderId(QueueADT<Order> orderQueue) {
-        int maxOrderId = 0;
-
-        for (int i = 0; i < orderQueue.size(); i++) {
-            Order order = orderQueue.getOrderId(i); // Ensure type casting is correct
-            String orderId = order.getOrderId();
-            int currentId = Integer.parseInt(orderId.replace("ORD", ""));
-            if (currentId > maxOrderId) {
-                maxOrderId = currentId;
-            }
-        }
-
-        // Generate new order ID
-        return "ORD" + (maxOrderId + 1);
-    }
-
-
     private static void displayOrders(QueueADT<Order> orderQueue) {
-            System.out.println("List of Orders:");
-            for (int i = 0; i < orderQueue.size(); i++) {
-                Order order = orderQueue.getOrderId(i);
-                //System.out.println("Order " + (i + 1) + ":");
-                System.out.println(order);
-                System.out.println();
-            }
+        System.out.println("List of Orders:");
+        for (int i = 0; i < orderQueue.size(); i++) {
+            Order order = orderQueue.getOrder(i);
+            System.out.println(order);
+            System.out.println();
+        }
     }
 
     private static void searchOrder(QueueADT<Order> orderQueue, Scanner scanner) {
         System.out.println("Search by:");
-        System.out.println("1. Order ID");
+        System.out.println("1. Book Name");
         System.out.println("2. Customer Name");
         System.out.print("Choose an option (1 or 2): ");
         int choice = scanner.nextInt();
-        scanner.nextLine(); // Consume the newline character
+        scanner.nextLine();
 
         boolean found = false;
 
         if (choice == 1) {
-            // Search by Order ID
-            System.out.print("Enter order ID to search: ");
-            String orderId = scanner.nextLine();
+            // Search by Book Name
+            System.out.print("Enter book name to search: ");
+            String bookName = scanner.nextLine();
 
             for (int i = 0; i < orderQueue.size(); i++) {
-                Order order = orderQueue.getOrderId(i);
-                if (order.getOrderId().equalsIgnoreCase(orderId)) {
+                Order order = orderQueue.getOrder(i);
+                if (order.getBookName().equalsIgnoreCase(bookName)) {
                     System.out.println("Order found: \n" + order);
                     found = true;
-                    break;
                 }
             }
         } else if (choice == 2) {
-            // Search by Customer Name
             System.out.print("Enter customer name to search: ");
             String customerName = scanner.nextLine();
 
             for (int i = 0; i < orderQueue.size(); i++) {
-                Order order = orderQueue.getOrderId(i);
+                Order order = orderQueue.getOrder(i);
                 if (order.getCustomerName().equalsIgnoreCase(customerName)) {
                     System.out.println("Order found: \n" + order);
                     found = true;
@@ -371,7 +341,6 @@ public class BookManagement {
         }
     }
 
-
     private static void processOrder(QueueADT<Order> orderQueue) {
         if (orderQueue.isEmpty()) {
             System.out.println("No orders to process.");
@@ -379,5 +348,31 @@ public class BookManagement {
             Order processedOrder = orderQueue.poll();
             System.out.println("Processed Order: " + processedOrder);
         }
+    }
+
+    // Measure the time for execution of a task
+    private static void measure(String taskName, Runnable task) {
+        long startTime = System.nanoTime();
+        task.run();
+        long endTime = System.nanoTime();
+        long duration = (endTime - startTime) / 1_000_000; // Convert to milliseconds
+        System.out.println(taskName + " took " + duration + " milliseconds.");
+    }
+
+    // Initialize books and orders with mock data
+    private static void initializeBooks(MyArrayList<Book> books) {
+        books.add(new Book("The Great Gatsby", "Fiction", "F. Scott Fitzgerald", 9.99, 10));
+        books.add(new Book("1984", "Dystopian", "George Orwell", 8.99, 10));
+        books.add(new Book("To Kill a Mockingbird", "Fiction", "Harper Lee", 7.99, 20));
+        books.add(new Book("Sherlock Holmes", "Detective", "Arthur Conan Doyle", 10.5, 25));
+        books.add(new Book("Titanic", "Romantic", "James Cameron", 12.5, 15));
+    }
+
+    private static void initializeOrders(QueueADT<Order> orderQueue, MyArrayList<Book> books) {
+        orderQueue.offer(new Order(books.get(4), 2, "Alice Nguyen", "123 Main St, Hanoi"));
+        orderQueue.offer(new Order(books.get(2), 1, "Bob Tran", "456 Oak St, Ho Chi Minh City"));
+        orderQueue.offer(new Order(books.get(1), 3, "Charlie Le", "789 Pine St, Da Nang"));
+        orderQueue.offer(new Order(books.get(3), 4, "David Pham", "321 Elm St, Hai Phong"));
+        orderQueue.offer(new Order(books.get(2), 1, "David Phan", "31 Elm St, Hai Phong"));
     }
 }

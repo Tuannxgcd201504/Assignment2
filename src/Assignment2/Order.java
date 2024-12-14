@@ -7,17 +7,21 @@ public class Order {
     private String customerName;
     private String shippingAddress;
 
-//    private static int orderCount = 1;
+    private static int orderCount = 1;
 
-    public Order(String orderId, Book bookName, int quantity, String customerName, String shippingAddress) {
-        this.orderId = orderId;
+    public Order(Book bookName, int quantity, String customerName, String shippingAddress) {
+        //this.orderId = orderId;
         this.bookName = bookName;
         this.quantity = quantity;
         this.customerName = customerName;
         this.shippingAddress = shippingAddress;
-        updateBookQuantity();
+        //updateBookQuantity();
+        createOrderID();
     }
 
+    private void createOrderID(){
+        orderId = "ORD" + orderCount++;
+    }
     private void updateBookQuantity() {
         if (bookName == null) {
             System.out.println("Book object is not initialized.");
@@ -41,12 +45,13 @@ public class Order {
         }
     }
 
-
     public String getOrderId() {
+
         return orderId;
     }
 
     public String getBookName() {
+
         return bookName.getName();
     }
 
@@ -63,7 +68,7 @@ public class Order {
 
     @Override
     public String toString() {
-        return String.format("Order ID: %s\nBook: %s\nQuantity: %d\nCustomer Name: %s\nShipping Address: %s\n",
+        return String.format("Order ID: %s, Book: %s, Quantity: %d, Customer Name: %s, Shipping Address: %s",
                 orderId, bookName.getName(), quantity, customerName, shippingAddress);
     }
 }

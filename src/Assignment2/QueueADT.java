@@ -2,7 +2,6 @@ package Assignment2;
 
 import java.util.NoSuchElementException;
 
-// Class QueueADT remains the same
 public class QueueADT<T> implements AbstractQueueADT<T> {
     private class Node<T> {
         private T element;
@@ -49,7 +48,7 @@ public class QueueADT<T> implements AbstractQueueADT<T> {
         return oldNodeValue;
     }
 
-    public T getOrderId(int index) {
+    public T getOrder(int index) {
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
         }
@@ -96,5 +95,5 @@ public class QueueADT<T> implements AbstractQueueADT<T> {
 
         return results.toString();
     }
-
 }
+
